@@ -1,11 +1,14 @@
 import React from "react";
 
 import "../styles/Form.css";
+import BalanceScreen from "./BalanceScreen";
 
 
 
 let incomeArray = [];
 let spendingsArray = [];
+
+//storage functions
 
 function formatLocalStorage() {
 
@@ -28,7 +31,6 @@ function formatLocalStorage() {
     console.log("Spendings Array: ", spendingsArray);
 
 }
-formatLocalStorage();
 
 function addDataToLocalStorage() {
     const iA = JSON.stringify(incomeArray);
@@ -52,15 +54,43 @@ function showLocalStorageData(){
 
 function clearLocalStorage() {
     localStorage.clear();
+    
+    incomeArray=[];
+    spendingsArray=[];
+    formatLocalStorage();
 
     console.log("The local storage was cleared!");
 }
+//balance functions
+
+function getIncome(){
+    let sum = 0;
+
+    for(const income of incomeArray){
+        sum+= parseInt(income.incomeAmount);
+    }
+
+    return sum;
+}
+
+function getSpendings(){
+    let sum = 0;
+
+    for(const spending of spendingsArray){
+        sum+= parseInt(spending.spendingAmount);
+    }
+
+    return sum;
+}
+
+formatLocalStorage();
 
 
 export default class Form extends React.Component {
     constructor(props) {
         super(props);
 
+        this.getBalance = this.getBalance.bind(this);
         this.switchScreens = this.switchScreens.bind(this);
         this.render = this.render.bind(this);
     }
@@ -75,8 +105,23 @@ export default class Form extends React.Component {
         spendingCategory: "",
         // 
         spendingsHistory: spendingsArray,
-        incomeHistory: incomeArray
+        incomeHistory: incomeArray,
+        //
+        balance: 0
     }
+
+    //
+    componentDidMount(){
+        this.getBalance();
+    }
+    //balance functions
+
+    getBalance(){
+        let balance = getIncome()-getSpendings();
+        
+        this.setState({balance: balance});
+    }
+
 
     switchScreens() {
         if (this.state.screenType === "addIncome") {
@@ -112,6 +157,8 @@ export default class Form extends React.Component {
         }
         addDataToLocalStorage();
 
+        this.getBalance();
+
         console.log("Current state: ", this.state);
     }
 
@@ -143,10 +190,12 @@ export default class Form extends React.Component {
         }
 
         return (<>
+            <BalanceScreen balance={this.state.balance}/>
+
             <button onClick={this.switchScreens}>Switch Screens</button>
             {getTheScreen(this.state)}
-            <button onClick={showLocalStorageData}>Show the data in the local storage</button>
-            <button onClick={clearLocalStorage}>Clear the local storage</button>
+            <button onClick={()=>{showLocalStorageData(); this.getBalance()}}>Show the data in the local storage</button>
+            <button onClick={()=>{clearLocalStorage(); this.getBalance()}}>Clear the local storage</button>
         </>);
     }
 
