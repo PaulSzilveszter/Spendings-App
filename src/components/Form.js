@@ -2,7 +2,7 @@ import React from "react";
 
 import "../styles/Form.css";
 import BalanceScreen from "./BalanceScreen";
-
+import BalanceChangesList from "./BalanceChangesList";
 
 
 let incomeArray = [];
@@ -25,7 +25,7 @@ function formatLocalStorage() {
     incomeArray = JSON.parse(localStorage.getItem("incomeArray"));
     spendingsArray = JSON.parse(localStorage.getItem("spendingsArray"));
 
-    console.log("The data in the local storage at the beggining is: ");
+    console.log("The data in the local storage is: ");
 
     console.log("Income Array: ", incomeArray);
     console.log("Spendings Array: ", spendingsArray);
@@ -53,13 +53,15 @@ function showLocalStorageData(){
 }
 
 function clearLocalStorage() {
+    console.clear();
+    console.log("The local storage was cleared!");
     localStorage.clear();
     
     incomeArray=[];
     spendingsArray=[];
     formatLocalStorage();
 
-    console.log("The local storage was cleared!");
+    
 }
 //balance functions
 
@@ -93,6 +95,7 @@ export default class Form extends React.Component {
         this.getBalance = this.getBalance.bind(this);
         this.switchScreens = this.switchScreens.bind(this);
         this.render = this.render.bind(this);
+        this.handleClick = this.handleClick.bind(this);
     }
 
     state = {
@@ -115,6 +118,10 @@ export default class Form extends React.Component {
         this.getBalance();
     }
     //balance functions
+
+    handleClick(){
+        this.setState({ spendingsHistory: spendingsArray, incomeHistory: incomeArray });
+    }
 
     getBalance(){
         let balance = getIncome()-getSpendings();
@@ -144,14 +151,14 @@ export default class Form extends React.Component {
         e.preventDefault();
 
         if (this.state.screenType === "addIncome") {
-            incomeArray.push({ incomeAmount: this.state.incomeAmount });
+            incomeArray.push({type :"income", incomeAmount: this.state.incomeAmount });
 
             this.setState({ incomeHistory: incomeArray });
         }
         else {
             const s = this.state;
 
-            spendingsArray.push({ spendingName: s.spendingName, spendingAmount: s.spendingAmount, spendingCategory: s.spendingCategory });
+            spendingsArray.push({type:"spending", spendingName: s.spendingName, spendingAmount: s.spendingAmount, spendingCategory: s.spendingCategory });
 
             this.setState({ spendingsHistory: spendingsArray });
         }
@@ -164,7 +171,7 @@ export default class Form extends React.Component {
 
     render() {
 
-        const spendingScreen = (<form onSubmit={this.handleSubmit}>
+        const spendingScreen = (<form key="spendingScreen" onSubmit={this.handleSubmit}>
             <input type="text" name="spendingName" id="spendingName" value={this.state.spendingName} onChange={this.handleChange} placeholder="Spending Name..." required></input>
 
             <input type="number" name="spendingAmount" id="spendingAmount" value={this.state.spendingAmount} onChange={this.handleChange} placeholder="Spending Amount..." required></input>
@@ -174,7 +181,7 @@ export default class Form extends React.Component {
             <button type="submit" >Submit</button>
         </form>);
 
-        const incomeScreen = (<form onSubmit={this.handleSubmit}>
+        const incomeScreen = (<form key="incomeScreen" onSubmit={this.handleSubmit}>
             <input type="number" name="incomeAmount" id="incomeAmount" value={this.state.incomeAmount} onChange={this.handleChange} placeholder="Income Amount..." required></input>
 
             <button type="submit" >Submit</button>
@@ -189,13 +196,20 @@ export default class Form extends React.Component {
             }
         }
 
+        const buttons = [<button key  = "1" onClick={this.switchScreens}>Switch Screens</button>,
+        getTheScreen(this.state),
+        
+        <button key  = "2" onClick={()=>{showLocalStorageData(); this.getBalance()}}>Show the data in the local storage</button>,
+        
+        <button key  = "3" onClick={()=>{clearLocalStorage(); this.getBalance(); this.handleClick();}}>Clear the local storage</button>]
+
         return (<>
             <BalanceScreen balance={this.state.balance}/>
+            {buttons}
+            <BalanceChangesList iA = {this.state.incomeHistory} sA ={this.state.spendingsHistory}/>
 
-            <button onClick={this.switchScreens}>Switch Screens</button>
-            {getTheScreen(this.state)}
-            <button onClick={()=>{showLocalStorageData(); this.getBalance()}}>Show the data in the local storage</button>
-            <button onClick={()=>{clearLocalStorage(); this.getBalance()}}>Clear the local storage</button>
+
+
         </>);
     }
 
